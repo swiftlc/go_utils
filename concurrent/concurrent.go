@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/swiftlc/go_utils/common"
 	"go.opencensus.io/trace"
 )
 
@@ -19,6 +20,7 @@ func SafeGo(ctx context.Context, w *sync.WaitGroup, concurrent int,
 		go func(index int) {
 			defer func() {
 				if e := recover(); e != nil {
+
 				}
 				if w != nil {
 					w.Done()
@@ -43,4 +45,13 @@ func SafeChanConsume(ctx context.Context, w *sync.WaitGroup, concurrent int, ch 
 			f(newCtx, v.Event)
 		}
 	})
+}
+
+func SendEvent(ctx context.Context, ch chan<- *EventWithCtx, data interface{}) error {
+	event := &EventWithCtx{
+		Event: data,
+		Ctx:   CopyCtx(ctx, context.Background()),
+	}
+
+	return common.SendEvent(ctx, ch, event)
 }

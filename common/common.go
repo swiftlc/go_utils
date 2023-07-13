@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
@@ -77,4 +78,13 @@ func MD5(source string) string {
 	md5Ctx.Write([]byte(source))
 	cipherStr := md5Ctx.Sum(nil)
 	return strings.ToLower(hex.EncodeToString(cipherStr))
+}
+
+func SendEvent[T any](ctx context.Context, ch chan<- T, data T) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case ch <- data:
+		return nil
+	}
 }
