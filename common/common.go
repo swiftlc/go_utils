@@ -37,7 +37,7 @@ func LazyLoad[T any](getter func() *T) func() *T {
 	}
 }
 
-func SnakeToCamel(s string, bigCamel bool) string {
+func Snake2Camel(s string, bigCamel bool) string {
 	var buf strings.Builder
 	var nextUpper bool
 	for idx, r := range s {
@@ -54,10 +54,22 @@ func SnakeToCamel(s string, bigCamel bool) string {
 			buf.WriteRune(unicode.ToUpper(r))
 			nextUpper = false
 		} else {
-			buf.WriteRune(r)
+			buf.WriteRune(unicode.ToLower(r))
 		}
 	}
 	return buf.String()
+}
+
+func Camel2Snake(s string) string {
+	var newStr []rune
+	for index, v := range []rune(s) {
+		if unicode.IsUpper(v) && index != 0 {
+			newStr = append(newStr, rune('_'))
+		}
+		newStr = append(newStr, unicode.ToLower(v))
+	}
+
+	return string(newStr)
 }
 
 func MD5(source string) string {

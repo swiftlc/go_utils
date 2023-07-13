@@ -3,6 +3,7 @@ module github.com/swiftlc/go_utils
 go 1.18
 
 require (
+	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.38.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.5.1
