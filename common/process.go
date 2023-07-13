@@ -12,7 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-func RunCmd(ctx context.Context, cmd string, args ...string) ([]byte, []byte, error) {
+type RunCmdResult struct {
+	StdOut []byte `json:"std_out"`
+	StdErr []byte `json:"std_err"`
+}
+
+func RunCmd(ctx context.Context, cmd string, args ...string) (*RunCmdResult, error) {
 	cmd = fmt.Sprintf("%s %s", cmd, strings.Join(args, " "))
 	//ins := exec.CommandContext(ctx, "bash", "-c", cmd)	//如果启动了子进程，则ctx cancel无法关闭子进程
 	ins := exec.Command("bash", "-c", cmd)
@@ -50,8 +55,40 @@ func RunCmd(ctx context.Context, cmd string, args ...string) ([]byte, []byte, er
 	ins.Stderr = &stderr
 
 	if err := ins.Run(); err != nil {
-		return stdout.Bytes(), stderr.Bytes(), errors.Wrap(err, "run cmd")
+		return nil, errors.Wrap(err, "run cmd")
 	}
 
-	return stdout.Bytes(), stderr.Bytes(), nil
+	var result RunCmdResult
+	result.StdOut = stdout.Bytes()
+	result.StdErr = stderr.Bytes()
+
+	return &result, nil
+}
+
+//apple script
+func AppleScript(ctx context.Context, script string, isJxa bool) (*RunCmdResult, error) {
+	args := []string{}
+	if isJxa {
+		args = append(args, "-l", "JavaScript")
+	}
+	args = append(args, "-e", script)
+	result, err := RunCmd(ctx, "osascript", args...)
+
+	return result, errors.Wrap(err, "run apple script")
+}
+
+//convinient
+
+//创建提醒
+func MakeRmd(ctx context.Context, title, body string, minute int) (*RunCmdResult, error) {
+	script := fmt.Sprintf(`tell application "Reminders"
+	set theReminder to make new reminder with properties {name:"%s", body:"%s", remind me date:(current date) + (%d * minutes)}
+	end tell`, title, body, minute)
+	return AppleScript(ctx, script, false)
+}
+
+//发送系统通知
+func MakeNotify(ctx context.Context, title, content string) (*RunCmdResult, error) {
+	script := fmt.Sprintf(`display notification "%s" with title "%s"`, content, title)
+	return AppleScript(ctx, script, false)
 }
